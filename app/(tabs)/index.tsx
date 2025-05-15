@@ -2,9 +2,11 @@
 
 import MovieCard from "@/components/MovieCard";
 import SearchBar_temp from "@/components/SearchBar_temp";
+import TrendingCard from "@/components/TrendingCard";
 import { icons } from "@/constants/icons";
 import { images } from "@/constants/images";
 import { fetchMovies } from "@/services/api";
+import { getTrendingMovies } from "@/services/appwrite";
 import usefetch from "@/services/usefetch";
 import { useRouter } from 'expo-router';
 import { ActivityIndicator, FlatList, Image, ScrollView, Text, View } from "react-native";
@@ -12,7 +14,16 @@ import { ActivityIndicator, FlatList, Image, ScrollView, Text, View } from "reac
 export default function Index() {
   const router = useRouter();
 
-  const { data: movies, loading: moviesLoading, error: moviesError } = usefetch(() => fetchMovies({
+  const {
+    data: trendingMovies,
+    loading: trendingLoading,
+    error: trendingError,
+  } = usefetch(getTrendingMovies);
+
+  const { data: movies,
+    loading: moviesLoading,
+    error: moviesError
+  } = usefetch(() => fetchMovies({
     query: '',
   }))
   return (
@@ -29,13 +40,15 @@ export default function Index() {
       >
         <Image source={icons.logo} className="w-12 h-10 mt-20 mb-5 mx-auto" />
 
-        {moviesLoading ? (
+        {moviesLoading || trendingLoading ? (
           <ActivityIndicator
             size='large'
             color='#000ff'
             className="mt-10 self-center"
           />
-        ) : moviesError ? (<Text>Error:{moviesError?.message}</Text>) :
+        ) : moviesError || trendingError ? (
+          <Text>Error:{moviesError?.message || trendingError?.message}</Text>
+        ) :
           (
             <View className="flex-1 mt-5">
               <SearchBar_temp
@@ -43,6 +56,26 @@ export default function Index() {
                 placeholder="Search for a movie"
               />
 
+              {trendingMovies && (
+                <View className="mt-10">
+                  <Text className="text-lg text-white font-bold mb-3">Trending movies</Text>
+                  <FlatList
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    className="mb-4 mt-3"
+                    data={trendingMovies}
+                    contentContainerStyle={{
+                      gap: 26,
+                    }}
+                    renderItem={({ item, index }) => (
+                      <TrendingCard movie={item} index={index} />
+                    )}
+                    keyExtractor={(item) => item.movie_id.toString()}
+                    ItemSeparatorComponent={() => <View className="w-4" />}
+                  />
+                </View>
+
+              )}
               <>
                 <Text className="text-lg font-bold mt-5 text-white mb-3">Latest Movies</Text>
 

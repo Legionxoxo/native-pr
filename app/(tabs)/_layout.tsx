@@ -9,20 +9,18 @@ const TabIcon = ({ focused, icon, title }: any) => {
         return (
             <ImageBackground
                 source={images.highlight}
-                className='flex flex-row w-full flex-1 min-w-[112px] min-h-16 mt-4 justify-center items-center rounded-full overflow-hidden' >
-
+                className='flex flex-row w-full flex-1 min-w-[112px] min-h-16 mt-4 justify-center items-center rounded-full overflow-hidden'
+            >
                 <Image source={icon} tintColor='#151312' className='size-5' />
-
-                <Text className=' text-secondary text-base font-semibold ml-2'>{title}</Text>
-            </ImageBackground >
+                <Text className='text-secondary text-base font-semibold ml-2'>{title}</Text>
+            </ImageBackground>
         )
     }
     return (
-        <View className='size-full justify-center items-center mt-4  rounded-full'>
+        <View className='size-full justify-center items-center mt-4 rounded-full'>
             <Image source={icon} tintColor="#A8B5DB" className='size-5' />
         </View>
     )
-
 }
 
 const _layout = () => {
@@ -45,16 +43,13 @@ const _layout = () => {
                     position: 'absolute',
                     overflow: 'hidden',
                     borderWidth: 0,
-                    borderColor: '0f0d23'
-
+                    borderColor: '#0f0d23'
                 }
-
             }}>
             <Tabs.Screen name='index'
                 options={{
                     title: 'Home', headerShown: false,
                     tabBarIcon: ({ focused }) => (
-
                         <TabIcon
                             focused={focused}
                             icon={icons.home}
@@ -67,7 +62,6 @@ const _layout = () => {
                 options={{
                     title: 'Search', headerShown: false,
                     tabBarIcon: ({ focused }) => (
-
                         <TabIcon
                             focused={focused}
                             icon={icons.search}
@@ -80,7 +74,6 @@ const _layout = () => {
                 options={{
                     title: 'Saved', headerShown: false,
                     tabBarIcon: ({ focused }) => (
-
                         <TabIcon
                             focused={focused}
                             icon={icons.save}
@@ -93,7 +86,6 @@ const _layout = () => {
                 options={{
                     title: 'Profile', headerShown: false,
                     tabBarIcon: ({ focused }) => (
-
                         <TabIcon
                             focused={focused}
                             icon={icons.person}
