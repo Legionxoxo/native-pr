@@ -25,3 +25,24 @@ export const requestImagePickerPermission = async () => {
     }
     return true;
 };
+
+export const requestCameraPermission = async () => {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== "granted") {
+        Alert.alert(
+            "Permission Denied",
+            "We need access to your camera to take pictures."
+        );
+        return false;
+    }
+    return true;
+};
+
+// Optionally, request all together:
+export const requestAllPermissions = async () => {
+    const mediaPermission = await requestMediaLibraryPermission();
+    const imagePickerPermission = await requestImagePickerPermission();
+    const cameraPermission = await requestCameraPermission();
+
+    return mediaPermission && imagePickerPermission && cameraPermission;
+};

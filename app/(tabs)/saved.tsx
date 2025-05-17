@@ -1,200 +1,294 @@
-import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
-import { ActivityIndicator, FlatList, Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { requestAllPermissions, requestCameraPermission } from '@/utlis/permissions';
+import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
+import * as MediaLibrary from 'expo-media-library';
+import React, { useEffect, useState } from 'react';
+import {
+    ActivityIndicator,
+    Alert,
+    FlatList,
+    Image,
+    RefreshControl,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View
+} from 'react-native';
 
-import MovieCard from "@/components/MovieCard";
-import { icons } from "@/constants/icons";
-
-// Dummy saved movies data grouped by time period
-const dummySavedMovies = {
-    today: [
-        {
-            id: 102,
-            title: "The Matrix",
-            poster_path: "/f89U3ADr1oiB1s9GkdPOEpXUk5H.jpg",
-            vote_average: 8.7,
-            release_date: "1999-03-31",
-        },
-    ],
-    lastWeek: [
-        {
-            id: 201,
-            title: "Pulp Fiction",
-            poster_path: "/d5iIlFn5s0ImszYzBPb8JPIfbXD.jpg",
-            vote_average: 8.9,
-            release_date: "1994-10-14",
-        },
-        {
-            id: 202,
-            title: "The Shawshank Redemption",
-            poster_path: "/q6y0Go1tsGEsmtFryDOJo3dEmqu.jpg",
-            vote_average: 9.3,
-            release_date: "1994-09-23",
-        },
-        {
-            id: 203,
-            title: "The Dark Knight",
-            poster_path: "/qJ2tW6WMUDux911r6m7haRef0WH.jpg",
-            vote_average: 9.0,
-            release_date: "2008-07-18",
-        },
-    ],
-    lastMonth: [
-        {
-            id: 301,
-            title: "Interstellar",
-            poster_path: "/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg",
-            vote_average: 8.6,
-            release_date: "2014-11-07",
-        },
-        {
-            id: 302,
-            title: "The Godfather",
-            poster_path: "/3bhkrj58Vtu7enYsRolD1fZdja1.jpg",
-            vote_average: 9.2,
-            release_date: "1972-03-24",
-        },
-        {
-            id: 303,
-            title: "Fight Club",
-            poster_path: "/a26cQPRhJPX6GbWfQbvZdrrp9j9.jpg",
-            vote_average: 8.8,
-            release_date: "1999-10-15",
-        },
-    ],
-};
-
-type Movie = {
-    id: number;
-    title: string;
-    poster_path: string;
-    vote_average: number;
-    release_date: string;
-};
-
-type SavedMovies = {
-    today: Movie[];
-    lastWeek: Movie[];
-    lastMonth: Movie[];
-};
-export default function saved() {
-    const router = useRouter();
-
+export default function Saved() {
+    const [photos, setPhotos] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<Error | null>(null);
-    const [savedMovies, setSavedMovies] = useState<SavedMovies>({
-        today: [],
-        lastWeek: [],
-        lastMonth: [],
-    });
+    const [refreshing, setRefreshing] = useState(false);
+    const [hasPermission, setHasPermission] = useState(false);
 
     useEffect(() => {
-        const timer = setTimeout(() => {
-            try {
-                setSavedMovies(dummySavedMovies);
-                setError(null);
-            } catch (err) {
-                setError(new Error("Failed to load saved movies"));
-            } finally {
-                setLoading(false);
-            }
-        }, 1000);
+        (async () => {
+            // First ensure we have permissions
+            const permissionGranted = await requestAllPermissions();
+            setHasPermission(permissionGranted);
 
-        return () => clearTimeout(timer);
+            if (permissionGranted) {
+                loadPhotos();
+            }
+        })();
     }, []);
 
-    const renderSavedSection = (title: string, movies: any[]) => {
-        if (movies.length === 0) return null;
+    const loadPhotos = async () => {
+        try {
+            setLoading(true);
+
+            // Check permission status before accessing media library
+            const { status } = await MediaLibrary.getPermissionsAsync();
+            if (status !== 'granted') {
+                const { status: newStatus } = await MediaLibrary.requestPermissionsAsync();
+                if (newStatus !== 'granted') {
+                    setHasPermission(false);
+                    return;
+                }
+            }
+
+            // Get all assets, sorted by creation time (newest first)
+            const media = await MediaLibrary.getAssetsAsync({
+                mediaType: MediaLibrary.MediaType.photo,
+                first: 100,
+                sortBy: [MediaLibrary.SortBy.creationTime],
+            });
+
+            console.log(`Found ${media.assets.length} photos`); // Debug log
+
+            if (media.assets.length > 0) {
+                // Ensure we have valid URI for each asset
+                const validAssets = media.assets.filter(asset => asset.uri);
+                setPhotos(validAssets);
+            } else {
+                setPhotos([]);
+            }
+        } catch (error) {
+            console.error('Error loading photos:', error);
+            Alert.alert('Error', 'Failed to load photos: ' + (error instanceof Error ? error.message : 'Unknown error'));
+        } finally {
+            setLoading(false);
+            setRefreshing(false);
+        }
+    };
+
+    const onRefresh = async () => {
+        setRefreshing(true);
+        await loadPhotos();
+    };
+
+    const takePhoto = async () => {
+        const cameraPermission = await requestCameraPermission();
+
+        if (!cameraPermission) return;
+
+        try {
+            const result = await ImagePicker.launchCameraAsync({
+                allowsEditing: false,
+                quality: 1,
+            });
+
+            if (!result.canceled && result.assets && result.assets.length > 0) {
+                // Save to media library
+                await MediaLibrary.saveToLibraryAsync(result.assets[0].uri);
+                // Reload photos to include the newly taken photo
+                loadPhotos();
+                Alert.alert('Success', 'Photo saved to gallery');
+            }
+        } catch (error) {
+            Alert.alert('Error', 'Failed to take photo: ' + error.message);
+        }
+    };
+
+    const renderItem = ({ item }: any) => {
+        // Ensure we have a valid URI
+        if (!item || !item.uri) {
+            return null;
+        }
 
         return (
-            <View className="mb-8">
-                <View className="flex-row justify-between items-center mb-3">
-                    <Text className="text-lg text-white font-bold">{title}</Text>
-                    {movies.length > 3 && (
-                        <TouchableOpacity>
-                            <Text className="text-indigo-400 text-sm">See all</Text>
-                        </TouchableOpacity>
-                    )}
-                </View>
-
-                <FlatList
-                    data={movies}
-                    renderItem={({ item }) => <MovieCard {...item} />}
-                    keyExtractor={(item) => item.id.toString()}
-                    numColumns={3}
-                    columnWrapperStyle={{
-                        justifyContent: "flex-start",
-                        gap: 20,
-                        paddingRight: 5,
-                        marginBottom: 10,
-                    }}
-                    scrollEnabled={false}
+            <TouchableOpacity
+                style={styles.photoContainer}
+                onPress={() => {
+                    // Optional: Preview the image in full screen
+                    console.log('Tapped photo:', item.uri);
+                }}
+            >
+                <Image
+                    source={{ uri: item.uri }}
+                    style={styles.photo}
+                    // Add placeholder for when image is loading
+                    // Add error handling
+                    onError={(e) => console.log('Error loading image:', e.nativeEvent.error)}
                 />
-            </View>
+            </TouchableOpacity>
         );
     };
 
-    return (
-        <SafeAreaView className="flex-1 bg-gray-900">
-            <View className="flex-row justify-between items-center mx-5 mb-5">
-                <Text className="text-white text-2xl font-bold">Saved Movies</Text>
-                <TouchableOpacity className="bg-indigo-700 rounded-full p-2">
-                    <Image source={icons.save} className="size-5" tintColor="#fff" />
-                </TouchableOpacity>
-            </View>
-
-            {loading ? (
-                <ActivityIndicator size="large" color="#818cf8" className="mt-10" />
-            ) : error ? (
-                <View className="flex-1 justify-center items-center px-5">
-                    <Text className="text-red-500 text-center">{error.message}</Text>
-                    <TouchableOpacity
-                        className="mt-4 bg-indigo-700 py-2 px-4 rounded-lg"
-                        onPress={() => setLoading(true)}
-                    >
-                        <Text className="text-white">Try Again</Text>
-                    </TouchableOpacity>
-                </View>
-            ) : (
-                <ScrollView
-                    className="flex-1 px-5"
-                    showsVerticalScrollIndicator={false}
-                    contentContainerStyle={{
-                        paddingBottom: 80,
+    if (!hasPermission) {
+        return (
+            <View style={styles.container}>
+                <Text>We need permission to access your photos and camera.</Text>
+                <TouchableOpacity
+                    style={styles.permissionButton}
+                    onPress={async () => {
+                        const granted = await requestAllPermissions();
+                        setHasPermission(granted);
+                        if (granted) loadPhotos();
                     }}
                 >
-                    {/* Today's Saved Movies */}
-                    {renderSavedSection("Today", savedMovies.today)}
+                    <Text style={styles.permissionButtonText}>Grant Permissions</Text>
+                </TouchableOpacity>
+            </View>
+        );
+    }
 
-                    {/* Last Week's Saved Movies */}
-                    {renderSavedSection("Last Week", savedMovies.lastWeek)}
+    return (
+        <View style={styles.container}>
+            <View style={styles.header}>
+                <Text style={styles.headerText}>My Gallery</Text>
+            </View>
 
-                    {/* Last Month's Saved Movies */}
-                    {renderSavedSection("Last Month", savedMovies.lastMonth)}
-
-                    {/* Empty State */}
-                    {Object.values(savedMovies).every(arr => arr.length === 0) && (
-                        <View className="flex-1 justify-center items-center mt-20">
-                            <Image
-                                source={icons.save}
-                                className="size-16 mb-4 opacity-30"
-                                tintColor="#818cf8"
+            {loading && !refreshing ? (
+                <View style={styles.loadingContainer}>
+                    <ActivityIndicator size="large" color="#0000ff" />
+                    <Text style={styles.loadingText}>Loading photos...</Text>
+                </View>
+            ) : (
+                <>
+                    <FlatList
+                        data={photos}
+                        renderItem={renderItem}
+                        keyExtractor={item => item.id}
+                        numColumns={3}
+                        contentContainerStyle={styles.photosList}
+                        refreshControl={
+                            <RefreshControl
+                                refreshing={refreshing}
+                                onRefresh={onRefresh}
                             />
-                            <Text className="text-white text-lg font-semibold mb-2">No saved movies</Text>
-                            <Text className="text-gray-400 text-center">
-                                Movies you save will appear here organized by when you saved them
-                            </Text>
-                            <TouchableOpacity
-                                className="mt-6 bg-indigo-700 py-3 px-6 rounded-lg"
-                                onPress={() => router.push("/")}
-                            >
-                                <Text className="text-white font-semibold">Explore Movies</Text>
-                            </TouchableOpacity>
-                        </View>
-                    )}
-                </ScrollView>
+                        }
+                        ListEmptyComponent={
+                            <View style={styles.emptyContainer}>
+                                <Text style={styles.emptyText}>No photos found</Text>
+                                <Text style={styles.emptySubText}>Photos you take will appear here</Text>
+                                <TouchableOpacity
+                                    style={styles.emptyButton}
+                                    onPress={takePhoto}
+                                >
+                                    <Text style={styles.emptyButtonText}>Take a Photo</Text>
+                                </TouchableOpacity>
+                            </View>
+                        }
+                    />
+
+                    <TouchableOpacity
+                        style={styles.cameraButton}
+                        onPress={takePhoto}
+                    >
+                        <Ionicons name="camera" size={24} color="white" />
+                    </TouchableOpacity>
+                </>
             )}
-        </SafeAreaView>
+        </View>
     );
 }
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        backgroundColor: '#f8f8f8',
+    },
+    header: {
+        padding: 16,
+        backgroundColor: '#fff',
+        borderBottomWidth: 1,
+        borderBottomColor: '#e0e0e0',
+    },
+    headerText: {
+        fontSize: 20,
+        fontWeight: 'bold',
+    },
+    photosList: {
+        padding: 4,
+        flexGrow: 1, // Ensure it takes full space even with few items
+    },
+    photoContainer: {
+        flex: 1 / 3,
+        margin: 4,
+        aspectRatio: 1,
+        borderRadius: 8,
+        overflow: 'hidden',
+        backgroundColor: '#e1e1e1', // Background for when image is loading
+    },
+    photo: {
+        width: '100%',
+        height: '100%',
+        resizeMode: 'cover', // Ensure proper image scaling
+    },
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    loadingText: {
+        marginTop: 12,
+        fontSize: 16,
+    },
+    cameraButton: {
+        position: 'absolute',
+        bottom: 24,
+        right: 24,
+        width: 60,
+        height: 60,
+        borderRadius: 30,
+        backgroundColor: '#2196F3',
+        justifyContent: 'center',
+        alignItems: 'center',
+        elevation: 5,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+    },
+    emptyContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 40,
+        marginTop: 60,
+    },
+    emptyText: {
+        fontSize: 18,
+        color: '#757575',
+        fontWeight: 'bold',
+    },
+    emptySubText: {
+        fontSize: 14,
+        color: '#9E9E9E',
+        marginTop: 8,
+        marginBottom: 24,
+    },
+    emptyButton: {
+        backgroundColor: '#2196F3',
+        paddingHorizontal: 20,
+        paddingVertical: 10,
+        borderRadius: 8,
+    },
+    emptyButtonText: {
+        color: 'white',
+        fontWeight: 'bold',
+    },
+    permissionButton: {
+        marginTop: 20,
+        paddingVertical: 12,
+        paddingHorizontal: 24,
+        backgroundColor: '#2196F3',
+        borderRadius: 8,
+    },
+    permissionButtonText: {
+        color: 'white',
+        fontSize: 16,
+        fontWeight: '600',
+    }
+});
