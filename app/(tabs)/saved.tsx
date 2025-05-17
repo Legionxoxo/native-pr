@@ -65,13 +65,25 @@ const dummySavedMovies = {
     ],
 };
 
+type Movie = {
+    id: number;
+    title: string;
+    poster_path: string;
+    vote_average: number;
+    release_date: string;
+};
 
+type SavedMovies = {
+    today: Movie[];
+    lastWeek: Movie[];
+    lastMonth: Movie[];
+};
 export default function saved() {
     const router = useRouter();
 
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<Error | null>(null);
-    const [savedMovies, setSavedMovies] = useState({
+    const [savedMovies, setSavedMovies] = useState<SavedMovies>({
         today: [],
         lastWeek: [],
         lastMonth: [],
