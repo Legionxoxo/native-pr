@@ -1,4 +1,4 @@
----
+
 <h1 align="center">🎬 React Native TMDB Media Manager</h1>
 
 <p align="center">
@@ -6,7 +6,7 @@
   <img src="https://img.shields.io/badge/TMDB%20API-Integrated-green?logo=themoviedatabase&logoColor=white" />
   <img src="https://img.shields.io/badge/Media_Upload-Enabled-orange?logo=image&logoColor=white" />
 </p>
-
+---
 ## 📱 Overview
 
 **React Native TMDB Media Manager** is a cross-platform media app that enables users to:
