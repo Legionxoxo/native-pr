@@ -1,50 +1,100 @@
-# Welcome to your Expo app 👋
+---
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+<h1 align="center">🎬 React Native TMDB Media Manager</h1>
 
-## Get started
+<p align="center">
+  <img src="https://img.shields.io/badge/React_Native-Expo-blue?logo=react&logoColor=white" />
+  <img src="https://img.shields.io/badge/TMDB%20API-Integrated-green?logo=themoviedatabase&logoColor=white" />
+  <img src="https://img.shields.io/badge/Media_Upload-Enabled-orange?logo=image&logoColor=white" />
+</p>
+---
 
-1. Install dependencies
+## 📱 Overview
 
-   ```bash
-   npm install
-   ```
+**React Native TMDB Media Manager** is a cross-platform media app that enables users to:
 
-2. Start the app
+* 📤 Upload and set a **profile picture** from local storage
+* 🎞️ Save videos by providing a **movie name** and **release year**
+* 🔍 Automatically fetch metadata (like artwork, overview, release date, etc.) from **TMDB API**
+* 🔧 Designed to function similar to **Jellyfin** (a local media server), but built natively
+* 🔐 Plans for **user authentication**, **saved libraries**, and **media sync**
 
-   ```bash
-   npx expo start
-   ```
+---
 
-In the output, you'll find options to open the app in a
+## 🖼 Final Result
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+<p align="center">
+  <img src="./assets/images/native.png" alt="Final UI preview" width="300" />
+</p>
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+---
 
-## Get a fresh project
+## ✨ Features
 
-When you're ready, run:
+* 🛠 Built with **React Native** and **Expo**
+* 🎬 Fetches accurate movie metadata using **TMDB API**
+* 🧾 Automatically tags saved video files with correct metadata
+* 📁 Media file selection for profile image upload
+* 💾 Locally stores media information (future support for cloud sync)
+* 🧪 In-progress support for saved libraries and user profiles
+
+---
+
+## 📦 Tech Stack
+
+| Mobile App        | Media & APIs      | State & Styling       |
+| ----------------- | ----------------- | --------------------- |
+| **React Native**  | **TMDB API**      | React Context API     |
+| **Expo SDK**      | Local File Access | Tailwind / StyleSheet |
+| Expo Image Picker |                   | AsyncStorage (WIP)    |
+
+---
+
+## 🚀 Getting Started
+
+### ✅ Prerequisites
+
+* Node.js `>=18.x`
+* Expo CLI (`npm install -g expo-cli`)
+* TMDB Developer API Key
+* Emulator or Expo Go on a mobile device
+
+### 🛠 Installation
 
 ```bash
-npm run reset-project
+git clone https://github.com/yourusername/react-native-tmdb-media-manager.git
+cd react-native-tmdb-media-manager
+npm install
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+Add your TMDB API key to a `.env` file:
 
-## Learn more
+```env
+TMDB_API_KEY=your_tmdb_key_here
+```
 
-To learn more about developing your project with Expo, look at the following resources:
+Then run the development server:
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+```bash
+npx expo start
+```
 
-## Join the community
+Use the QR code or an emulator to view the app.
 
-Join our community of developers creating universal apps.
+---
+## 🔧 In Progress
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+* [ ] Video player integration
+* [ ] Authentication and profile saving
+* [ ] Cloud sync support
+* [ ] Auto-metadata refresh
+
+---
+## 📬 Contact
+
+* 📧 Email: [shivendrachandel3@gmail.com](mailto:shivendrachandel3@gmail.com)
+* 💻 GitHub: [github.com/Legionxoxo](https://github.com/Legionxoxo)
+* 🔗 LinkedIn: [linkedin.com/in/shiv04singh](https://www.linkedin.com/in/shiv04singh)
+
+---
+
